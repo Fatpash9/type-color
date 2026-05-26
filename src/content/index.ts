@@ -47,10 +47,9 @@ function setPaletteStyle(palette: Palette): void {
 
 function recolorTextNode(node: Text): void {
   const text = node.nodeValue;
-  if (!text) return;
-  if (!/[0-9A-Za-z]/.test(text)) return;
+  if (!text || !/[0-9A-Za-z]/.test(text)) return;
   const parent = node.parentNode;
-  if (!parent) return;
+  if (!parent || !parent.isConnected) return;
 
   const frag = document.createDocumentFragment();
   let buf = '';
@@ -77,17 +76,95 @@ function recolorTextNode(node: Text): void {
   parent.replaceChild(frag, node);
 }
 
-function walk(root: Node): void {
+function collectTextNodes(root: Node, out: Text[]): void {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode(n) {
       if (isSkippable(n.parentElement)) return NodeFilter.FILTER_REJECT;
       return NodeFilter.FILTER_ACCEPT;
     },
   });
-  const targets: Text[] = [];
   let n: Node | null;
-  while ((n = walker.nextNode())) targets.push(n as Text);
-  for (const t of targets) recolorTextNode(t);
+  while ((n = walker.nextNode())) out.push(n as Text);
+}
+
+const queue: Text[] = [];
+let cursor = 0;
+let scheduled = false;
+let observer: MutationObserver | null = null;
+const OBSERVER_OPTS: MutationObserverInit = {
+  childList: true,
+  subtree: true,
+  characterData: true,
+};
+
+const FRAME_BUDGET_MS = 8;
+
+function enqueueTextNode(t: Text): void {
+  if (isSkippable(t.parentElement)) return;
+  queue.push(t);
+}
+
+function schedule(): void {
+  if (scheduled) return;
+  if (cursor >= queue.length) return;
+  scheduled = true;
+  const cb = (deadline?: IdleDeadline): void => {
+    scheduled = false;
+    processChunk(deadline);
+  };
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(cb, { timeout: 200 });
+  } else {
+    setTimeout(() => cb(), 0);
+  }
+}
+
+function processChunk(deadline?: IdleDeadline): void {
+  if (cursor >= queue.length) {
+    queue.length = 0;
+    cursor = 0;
+    return;
+  }
+  observer?.disconnect();
+  const start = performance.now();
+  while (cursor < queue.length) {
+    const node = queue[cursor++]!;
+    if (node.isConnected) recolorTextNode(node);
+    if ((cursor & 63) === 0) {
+      const idle = deadline ? deadline.timeRemaining() : 50;
+      if (idle <= 0 || performance.now() - start > FRAME_BUDGET_MS) break;
+    }
+  }
+  if (observer && document.body) {
+    observer.observe(document.body, OBSERVER_OPTS);
+  }
+  if (cursor < queue.length) {
+    schedule();
+  } else {
+    queue.length = 0;
+    cursor = 0;
+  }
+}
+
+function startObserver(): void {
+  observer = new MutationObserver((records) => {
+    for (const rec of records) {
+      if (rec.type === 'characterData') {
+        const target = rec.target as Text;
+        if (target.nodeType === Node.TEXT_NODE) enqueueTextNode(target);
+      } else if (rec.type === 'childList') {
+        for (const n of rec.addedNodes) {
+          if (n.nodeType === Node.TEXT_NODE) {
+            enqueueTextNode(n as Text);
+          } else if (n.nodeType === Node.ELEMENT_NODE) {
+            collectTextNodes(n, queue);
+          }
+        }
+      }
+    }
+    schedule();
+  });
+  observer.observe(document.body, OBSERVER_OPTS);
 }
 
 async function main(): Promise<void> {
@@ -97,7 +174,10 @@ async function main(): Promise<void> {
   const palette = await loadPalette();
   setPaletteStyle(palette);
   subscribePalette(setPaletteStyle);
-  if (document.body) walk(document.body);
+  if (!document.body) return;
+  collectTextNodes(document.body, queue);
+  startObserver();
+  schedule();
 }
 
 void main();
