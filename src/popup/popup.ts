@@ -1,5 +1,6 @@
 import { GLYPHS, defaultPalette, isValidColor, type Glyph, type Palette } from '../lib/palette';
 import { loadPalette, savePalette } from '../lib/storage';
+import { isOriginDisabled, setOriginDisabled } from '../lib/settings';
 
 let palette: Palette;
 
@@ -47,6 +48,36 @@ async function onReset(): Promise<void> {
   buildGrid();
 }
 
+async function getActiveOrigin(): Promise<{ origin: string; hostname: string } | null> {
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tab = tabs[0];
+  if (!tab?.url) return null;
+  try {
+    const u = new URL(tab.url);
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
+    return { origin: u.origin, hostname: u.hostname };
+  } catch {
+    return null;
+  }
+}
+
+async function initSiteToggle(): Promise<void> {
+  const info = await getActiveOrigin();
+  if (!info) return;
+  const row = document.getElementById('site-row');
+  const toggle = document.getElementById('site-toggle') as HTMLInputElement | null;
+  const host = document.getElementById('site-host');
+  if (!row || !toggle || !host) return;
+
+  host.textContent = info.hostname;
+  toggle.checked = !(await isOriginDisabled(info.origin));
+  row.hidden = false;
+
+  toggle.addEventListener('change', () => {
+    void setOriginDisabled(info.origin, !toggle.checked);
+  });
+}
+
 async function init(): Promise<void> {
   palette = await loadPalette();
   buildGrid();
@@ -54,6 +85,7 @@ async function init(): Promise<void> {
   document.getElementById('reset')?.addEventListener('click', () => {
     void onReset();
   });
+  void initSiteToggle();
 }
 
 void init();

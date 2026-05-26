@@ -1,4 +1,5 @@
 import { loadPalette, subscribePalette } from '../lib/storage';
+import { isOriginDisabled } from '../lib/settings';
 import { GLYPHS, normalizeGlyph, type Palette } from '../lib/palette';
 
 const SPAN_CLASS = 'tc-g';
@@ -171,6 +172,7 @@ async function main(): Promise<void> {
   const root = document.documentElement;
   if (root.hasAttribute(ROOT_MARKER)) return;
   root.setAttribute(ROOT_MARKER, '');
+  if (await isOriginDisabled(location.origin)) return;
   const palette = await loadPalette();
   setPaletteStyle(palette);
   subscribePalette(setPaletteStyle);

@@ -54,6 +54,32 @@ h1 {
   color: var(--muted);
 }
 
+.site-row {
+  margin-bottom: 10px;
+  padding: 6px 8px;
+  background: var(--cell-bg);
+  border: 1px solid var(--hairline);
+  border-radius: 4px;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 11.5px;
+  color: var(--fg);
+}
+
+.toggle input[type="checkbox"] {
+  margin: 0;
+  accent-color: var(--muted);
+}
+
+#site-host {
+  color: var(--muted);
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(10, 1fr);
