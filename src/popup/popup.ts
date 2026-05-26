@@ -1,11 +1,36 @@
-import { GLYPHS, defaultPalette, isValidColor, type Glyph, type Palette } from '../lib/palette';
+import {
+  GLYPHS,
+  PALETTE_VERSION,
+  defaultPalette,
+  isValidColor,
+  sanitizePalette,
+  type Glyph,
+  type Palette,
+} from '../lib/palette';
 import { loadPalette, savePalette } from '../lib/storage';
 import { isOriginDisabled, setOriginDisabled } from '../lib/settings';
 
+const PALETTE_FORMAT = 'type-color-palette';
+
 let palette: Palette;
+let statusTimer: number | undefined;
+
+function $(id: string): HTMLElement | null {
+  return document.getElementById(id);
+}
+
+function setStatus(text: string): void {
+  const el = $('status');
+  if (!el) return;
+  el.textContent = text;
+  if (statusTimer) clearTimeout(statusTimer);
+  statusTimer = window.setTimeout(() => {
+    el.textContent = '';
+  }, 3000);
+}
 
 function buildGrid(): void {
-  const grid = document.getElementById('grid');
+  const grid = $('grid');
   if (!grid) return;
   grid.replaceChildren();
   for (const g of GLYPHS) {
@@ -46,6 +71,66 @@ async function onReset(): Promise<void> {
   palette = defaultPalette();
   await savePalette(palette);
   buildGrid();
+  setStatus('Palette reset.');
+}
+
+function exportPalette(): void {
+  const data = {
+    format: PALETTE_FORMAT,
+    version: PALETTE_VERSION,
+    palette,
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'type-color-palette.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  setStatus('Palette exported.');
+}
+
+function showImport(): void {
+  $('grid')!.hidden = true;
+  $('site-row')!.hidden = true;
+  $('import-panel')!.hidden = false;
+  ($('import-text') as HTMLTextAreaElement).focus();
+}
+
+async function hideImport(): Promise<void> {
+  ($('import-text') as HTMLTextAreaElement).value = '';
+  $('grid')!.hidden = false;
+  $('import-panel')!.hidden = true;
+  await refreshSiteRow();
+}
+
+async function applyImport(): Promise<void> {
+  const text = ($('import-text') as HTMLTextAreaElement).value.trim();
+  if (!text) {
+    setStatus('Paste palette JSON first.');
+    return;
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    setStatus('Could not parse JSON.');
+    return;
+  }
+  if (!parsed || typeof parsed !== 'object') {
+    setStatus('Not a palette file.');
+    return;
+  }
+  const obj = parsed as Record<string, unknown>;
+  if (obj.format !== PALETTE_FORMAT) {
+    setStatus('Not a Type Color palette.');
+    return;
+  }
+  palette = sanitizePalette(obj.palette);
+  await savePalette(palette);
+  buildGrid();
+  await hideImport();
+  setStatus('Palette imported.');
 }
 
 async function getActiveOrigin(): Promise<{ origin: string; hostname: string } | null> {
@@ -61,31 +146,35 @@ async function getActiveOrigin(): Promise<{ origin: string; hostname: string } |
   }
 }
 
-async function initSiteToggle(): Promise<void> {
+async function refreshSiteRow(): Promise<void> {
   const info = await getActiveOrigin();
-  if (!info) return;
-  const row = document.getElementById('site-row');
-  const toggle = document.getElementById('site-toggle') as HTMLInputElement | null;
-  const host = document.getElementById('site-host');
-  if (!row || !toggle || !host) return;
-
+  const row = $('site-row');
+  if (!row) return;
+  if (!info) {
+    row.hidden = true;
+    return;
+  }
+  const toggle = $('site-toggle') as HTMLInputElement | null;
+  const host = $('site-host');
+  if (!toggle || !host) return;
   host.textContent = info.hostname;
   toggle.checked = !(await isOriginDisabled(info.origin));
   row.hidden = false;
-
-  toggle.addEventListener('change', () => {
+  toggle.onchange = () => {
     void setOriginDisabled(info.origin, !toggle.checked);
-  });
+  };
 }
 
 async function init(): Promise<void> {
   palette = await loadPalette();
   buildGrid();
-  document.getElementById('grid')?.addEventListener('change', onColorChange);
-  document.getElementById('reset')?.addEventListener('click', () => {
-    void onReset();
-  });
-  void initSiteToggle();
+  $('grid')?.addEventListener('change', onColorChange);
+  $('reset')?.addEventListener('click', () => void onReset());
+  $('export')?.addEventListener('click', exportPalette);
+  $('import')?.addEventListener('click', showImport);
+  $('import-apply')?.addEventListener('click', () => void applyImport());
+  $('import-cancel')?.addEventListener('click', () => void hideImport());
+  void refreshSiteRow();
 }
 
 void init();

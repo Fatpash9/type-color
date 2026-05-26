@@ -18,9 +18,26 @@
         </label>
       </section>
       <div id="grid" class="grid" role="group" aria-label="Palette"></div>
+      <section id="import-panel" class="import-panel" hidden>
+        <p class="import-help">Paste palette JSON below.</p>
+        <textarea
+          id="import-text"
+          rows="8"
+          spellcheck="false"
+          autocomplete="off"
+          aria-label="Palette JSON"
+        ></textarea>
+        <div class="import-actions">
+          <button id="import-apply" type="button" class="link-button">Apply</button>
+          <button id="import-cancel" type="button" class="link-button">Cancel</button>
+        </div>
+      </section>
       <footer>
+        <button id="import" type="button" class="link-button">Import</button>
+        <button id="export" type="button" class="link-button">Export</button>
         <button id="reset" type="button" class="link-button">Reset palette</button>
       </footer>
+      <p id="status" class="status" aria-live="polite"></p>
     </main>
     <script type="module" src="./popup.ts"></script>
   </body>
