@@ -50,7 +50,7 @@ async function onReset(): Promise<void> {
 async function init(): Promise<void> {
   palette = await loadPalette();
   buildGrid();
-  document.getElementById('grid')?.addEventListener('input', onColorChange);
+  document.getElementById('grid')?.addEventListener('change', onColorChange);
   document.getElementById('reset')?.addEventListener('click', () => {
     void onReset();
   });
