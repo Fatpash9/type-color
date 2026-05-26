@@ -7,8 +7,14 @@
   </head>
   <body>
     <main>
-      <p class="tagline">Recolor letters and digits in your palette.</p>
-      <p class="placeholder">Palette editor coming next.</p>
+      <header>
+        <h1>Type Color</h1>
+        <p class="tagline">Click a letter or number to set its color.</p>
+      </header>
+      <div id="grid" class="grid" role="group" aria-label="Palette"></div>
+      <footer>
+        <button id="reset" type="button" class="link-button">Reset palette</button>
+      </footer>
     </main>
     <script type="module" src="./popup.ts"></script>
   </body>
