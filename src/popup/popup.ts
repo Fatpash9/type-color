@@ -13,6 +13,7 @@ import { isOriginDisabled, setOriginDisabled } from '../lib/settings';
 const PALETTE_FORMAT = 'type-color-palette';
 
 let palette: Palette;
+let dirty = false;
 let statusTimer: number | undefined;
 
 function $(id: string): HTMLElement | null {
@@ -56,7 +57,15 @@ function buildGrid(): void {
   }
 }
 
-function onColorChange(e: Event): void {
+function setDirty(value: boolean): void {
+  dirty = value;
+  const save = $('save') as HTMLButtonElement | null;
+  const hint = $('save-hint');
+  if (save) save.disabled = !value;
+  if (hint) hint.hidden = !value;
+}
+
+function onColorPreview(e: Event): void {
   const target = e.target as HTMLInputElement;
   const glyph = target.dataset.glyph as Glyph | undefined;
   if (!glyph || !isValidColor(target.value)) return;
@@ -64,13 +73,21 @@ function onColorChange(e: Event): void {
   palette[glyph] = next;
   const cell = target.closest('.cell') as HTMLElement | null;
   cell?.style.setProperty('--color', next);
-  void savePalette(palette);
+  setDirty(true);
+}
+
+async function onSave(): Promise<void> {
+  if (!dirty) return;
+  await savePalette(palette);
+  setDirty(false);
+  setStatus('Saved.');
 }
 
 async function onReset(): Promise<void> {
   palette = defaultPalette();
   await savePalette(palette);
   buildGrid();
+  setDirty(false);
   setStatus('Palette reset.');
 }
 
@@ -129,6 +146,7 @@ async function applyImport(): Promise<void> {
   palette = sanitizePalette(obj.palette);
   await savePalette(palette);
   buildGrid();
+  setDirty(false);
   await hideImport();
   setStatus('Palette imported.');
 }
@@ -168,7 +186,8 @@ async function refreshSiteRow(): Promise<void> {
 async function init(): Promise<void> {
   palette = await loadPalette();
   buildGrid();
-  $('grid')?.addEventListener('change', onColorChange);
+  $('grid')?.addEventListener('input', onColorPreview);
+  $('save')?.addEventListener('click', () => void onSave());
   $('reset')?.addEventListener('click', () => void onReset());
   $('export')?.addEventListener('click', exportPalette);
   $('import')?.addEventListener('click', showImport);

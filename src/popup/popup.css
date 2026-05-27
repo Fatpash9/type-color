@@ -127,6 +127,29 @@ footer {
   gap: 4px;
 }
 
+.save-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.save-hint {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.save-button {
+  color: var(--fg);
+}
+
+.link-button:disabled {
+  color: var(--hairline);
+  cursor: default;
+  text-decoration: none;
+}
+
 .import-panel {
   margin-bottom: 10px;
 }
