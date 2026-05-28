@@ -39,7 +39,7 @@ export function defaultPalette(): Palette {
   for (let i = 0; i < GLYPHS.length; i++) {
     const glyph = GLYPHS[i] as Glyph;
     const hue = Math.round((i * 360) / GLYPHS.length);
-    out[glyph] = hslToHex(hue, 42, 44);
+    out[glyph] = hslToHex(hue, 80, 47);
   }
   return out;
 }
