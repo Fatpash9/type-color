@@ -49,4 +49,4 @@ same URL with a new effective date.
 
 ## Contact
 
-For questions about this policy, contact: **{{contact-email}}**
+For questions about this policy, contact: **privacy@privacys.app**
