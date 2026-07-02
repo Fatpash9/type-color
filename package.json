@@ -2,13 +2,14 @@
   "name": "type-color",
   "private": true,
   "version": "1.0.0",
+  "license": "GPL-3.0-only",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "build:icons": "node scripts/build-icons.mjs",
     "typecheck": "tsc --noEmit",
-    "package": "npm run build && cd dist && zip -r ../type-color-1.0.0.zip ."
+    "package": "npm run build && rm -f type-color-*.zip && cd dist && zip -r \"../type-color-$npm_package_version.zip\" ."
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.4.0",
