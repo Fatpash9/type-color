@@ -59,8 +59,7 @@ glyphs fall back to the default palette.
 
 Type Color reads page text locally to recolor it and stores your palette
 in Chrome's sync storage. Nothing leaves your browser. Full policy:
-[PRIVACY.md](PRIVACY.md) or the
-[hosted version](https://fatpash9.github.io/type-color/).
+[privacys.app/privacy/type-color](https://www.privacys.app/privacy/type-color).
 
 ## Support
 

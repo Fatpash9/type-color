@@ -94,7 +94,7 @@ store's definition.
 **Privacy policy URL:**
 
 ```
-https://fatpash9.github.io/type-color/
+https://www.privacys.app/privacy/type-color
 ```
 
 ## Distribution tab
