@@ -1,5 +1,5 @@
 import sharp from 'sharp';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -146,3 +146,22 @@ await sharp(Buffer.from(svg), { density: 144 })
   .png()
   .toFile(out);
 console.log(`wrote ${out}`);
+
+// --- small promo tile, 440x280 ---
+const TW = 440;
+const TH = 280;
+const iconSvg = readFileSync(join(root, 'assets', 'icon.svg'), 'utf8');
+const iconInner = iconSvg.replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+const tile = [
+  `<rect width="${TW}" height="${TH}" fill="#ece9e3"/>`,
+  `<g transform="translate(40 76)">${iconInner}</g>`,
+  `<text x="196" y="128" font-family="sans-serif" font-size="34" font-weight="700" fill="#2a2a2a">Type Color</text>`,
+  recoloredLine('Aa Bb 123', 196, 180, 34),
+].join('');
+const tileSvg = `<svg width="${TW}" height="${TH}" xmlns="http://www.w3.org/2000/svg">${tile}</svg>`;
+const tileOut = join(outDir, 'promo-small-440x280.png');
+await sharp(Buffer.from(tileSvg), { density: 144 })
+  .resize(TW, TH, { fit: 'fill' })
+  .png()
+  .toFile(tileOut);
+console.log(`wrote ${tileOut}`);
