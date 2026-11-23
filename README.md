@@ -62,6 +62,11 @@ in Chrome's sync storage. Nothing leaves your browser. Full policy:
 [PRIVACY.md](PRIVACY.md) or the
 [hosted version](https://fatpash9.github.io/type-color/).
 
+## Support
+
+Type Color is free, with no ads and no tracking. If it's useful to you,
+you can support it at [buymeacoffee.com/typecolor](https://buymeacoffee.com/typecolor).
+
 ## License
 
 [GPL-3.0](LICENSE)

@@ -1,6 +1,6 @@
 # Type Color — Privacy Policy
 
-**Effective:** 2026-05-27
+**Effective:** 2026-11-22
 
 Type Color is a Chrome extension that recolors letters and digits on
 web pages according to a palette you configure. This policy describes
@@ -28,6 +28,13 @@ what the extension does with data and what it does not do.
   of any kind.
 - It does not read or modify form fields, password fields, or
   `contenteditable` content. These are skipped by design.
+
+## Support link
+
+The popup includes a "Support" link to the developer's Buy Me a Coffee
+page. It opens in a new tab only if you click it. The extension sends
+no data to Buy Me a Coffee; anything you choose to do on that site is
+covered by Buy Me a Coffee's own privacy policy.
 
 ## Permissions
 
